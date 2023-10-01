@@ -6,7 +6,7 @@ const router = express.Router();
 router.use(express.json());
 
 // TVControl API routes
-export default function expressAPI(TVs, tvFileHandler) {
+export default function expressAPI(TVs, tvFileHandler, cronJobs) {
 
   // API version endpoint
   router.get('/', (req, res) => {
@@ -71,7 +71,31 @@ export default function expressAPI(TVs, tvFileHandler) {
       // save the new TV
       TVs.groups.push({ name, powerOn, powerOff });
       await tvFileHandler.saveJSON(TVs);
-      console.log(TVs);
+
+      console.log("Starting cron jobs...");
+      if (powerOn != "") {
+        const onCron = cron.schedule(powerOn, () => {
+          //Power on all tvs in the group
+          console.log("Powering on all tvs in group: " + name);
+          for (let i = 0; i < TVs.tvs.length; i++) {
+            console.log("Powering on tv: " + TVs.tvs[i].name);
+          }
+        });
+
+        cronJobs[name + " - on"] = onCron;
+      }
+
+      if (powerOff != "") {
+        const offCron = cron.schedule(powerOff, () => {
+          //Power on all tvs in the group
+          console.log("Powering off all tvs in group: " + name);
+          for (let i = 0; i < TVs.tvs.length; i++) {
+            console.log("Powering off tv: " + TVs.tvs[i].name);
+          }
+        });
+
+        cronJobs[name + " - off"] = offCron;
+      }
 
       return res.status(201).json({ message: 'Group added successfully' });
     } catch (error) {
@@ -92,6 +116,18 @@ export default function expressAPI(TVs, tvFileHandler) {
       }
 
       TVs.groups.splice(groupIndex, 1);
+
+      //Try to stop the cron job if it exists and log it to the console
+      console.log("Attempting to stop cron jobs");
+      if (cronJobs[name + " - on"]) {
+        cronJobs[name + " - on"].stop();
+        console.log("Stopped cron job: " + name + " - on");
+      }
+
+      if (cronJobs[name + " - off"]) {
+        cronJobs[name + " - off"].stop();
+        console.log("Stopped cron job: " + name + " - off");
+      }
 
       await tvFileHandler.saveJSON(TVs);
       console.log(TVs);

@@ -20,7 +20,7 @@ initCron();
 
 
 // Mount the TV control API
-app.use('/api', expressAPI(TVs, tvFileHandler)); // Pass the TV data as an argument
+app.use('/api', expressAPI(TVs, tvFileHandler, cronJobs)); // Pass the TV data as an argument
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
@@ -28,12 +28,14 @@ app.listen(port, () => {
 
 
 async function initTVs() {
+    console.log("Loading save data...");
     try {
         const tvData = await tvFileHandler.readJSON();
+        console.log("Loaded!");
         return tvData;
     } catch (error) {
         console.error(error);
-        console.log("Creating new tvs.json file");
+        console.log("Creating new tvs.json save file...");
         await tvFileHandler.saveJSON({ "tvs": [], "groups": [] });
         return {};
     }
@@ -41,6 +43,7 @@ async function initTVs() {
 
 function initCron() {
     // Initialize cron jobs from JSON data
+    console.log("Initializing cron jobs...");
     TVs.groups.forEach((job) => {
         if (job.powerOn != "") {
             const onCron = cron.schedule(job.powerOn, () => {
