@@ -11,9 +11,12 @@ app.use(express.json());
 //Init file handler
 const tvFileHandler = new JSONFileHandler('./tvs.json');
 
+//Cron jobs
+let cronJobs = {};
+
 // Call init to load files and initialize cron jobs
 let TVs = await initTVs();
-await initCron();
+initCron();
 
 
 // Mount the TV control API
@@ -40,15 +43,27 @@ function initCron() {
     // Initialize cron jobs from JSON data
     TVs.groups.forEach((job) => {
         if (job.powerOn != "") {
-            cron.schedule(job.powerOn, () => {
+            const onCron = cron.schedule(job.powerOn, () => {
                 //Power on all tvs in the group
+                console.log("Powering on all tvs in group: " + job.name);
+                for(let i = 0; i < TVs.tvs.length; i++){
+                    console.log("Powering on tv: " + TVs.tvs[i].name);
+                }
             });
+
+            cronJobs[job.name + " - on"] = onCron;
         }
 
         if(job.powerOff != ""){
-            cron.schedule(job.powerOff, () => {
+            const offCron = cron.schedule(job.powerOff, () => {
                 //Power off all tvs in the group
+                console.log("Powering off all tvs in group: " + job.name);
+                for(let i = 0; i < TVs.tvs.length; i++){
+                    console.log("Powering off tv: " + TVs.tvs[i].name);
+                }
             });
+
+            cronJobs[job.name + " - off"] = offCron;
         }
     });
 }
