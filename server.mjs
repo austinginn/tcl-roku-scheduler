@@ -44,6 +44,10 @@ async function initTVs() {
 function initCron() {
     // Initialize cron jobs from JSON data
     console.log("Initializing cron jobs...");
+    if(TVs.groups.length == 0){
+        console.log("No groups found.");
+        return;
+    }
     TVs.groups.forEach((job) => {
         if (job.powerOn != "") {
             const onCron = cron.schedule(job.powerOn, () => {

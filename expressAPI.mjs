@@ -1,6 +1,9 @@
 // expressAPI.js
 import express from 'express';
+import cronParser from 'cron-parser';
+import cron from 'node-cron';
 const router = express.Router();
+
 
 // Middleware to parse JSON request bodies
 router.use(express.json());
@@ -18,18 +21,41 @@ export default function expressAPI(TVs, tvFileHandler, cronJobs) {
   router.post('/tv/add', async (req, res) => {
     try {
       // console.log(req.body);
-      const { name, ipAddress, group } = req.body;
+      const { name, ipAddress, group, description } = req.body;
       // Check if the TV already exists
       if (TVs.tvs.find((tv) => tv.ipAddress === ipAddress)) {
         return res.status(409).json({ error: `TV '${ipAddress}' already exists.` });
       }
 
       // save the new TV
-      TVs.tvs.push({ name, ipAddress, group });
+      TVs.tvs.push({ name, ipAddress, group, description });
       await tvFileHandler.saveJSON(TVs);
       console.log(TVs);
 
       return res.status(201).json({ message: 'TV added successfully' });
+    } catch (error) {
+      console.error('Error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+
+  // Update a TV
+  router.put('/tv/update', async (req, res) => {
+    try {
+      const { name, ipAddress, group, description } = req.body;
+
+      // Check if the TV exists
+      const tvIndex = TVs.tvs.findIndex((tv) => tv.ipAddress === ipAddress);
+      if (tvIndex === -1) {
+        return res.status(404).json({ error: `TV '${ipAddress}' does not exist` });
+      }
+
+      // Update the TV
+      TVs.tvs[tvIndex] = { name, ipAddress, group, description };
+      await tvFileHandler.saveJSON(TVs);
+      console.log(TVs);
+      return res.status(200).json({ message: 'TV updated successfully' });
     } catch (error) {
       console.error('Error:', error);
       return res.status(500).json({ error: 'Internal server error' });
@@ -68,6 +94,8 @@ export default function expressAPI(TVs, tvFileHandler, cronJobs) {
         return res.status(409).json({ error: `Group '${name}' already exists.` });
       }
 
+      //would be nice to save a human readable string as well.
+      
       // save the new TV
       TVs.groups.push({ name, powerOn, powerOff });
       await tvFileHandler.saveJSON(TVs);
@@ -137,6 +165,18 @@ export default function expressAPI(TVs, tvFileHandler, cronJobs) {
       return res.status(500).json({ error: 'Internal server error' });
     }
   });
+
+  // //API endpoint that returns a cron expression based on human readable input
+  // router.post('/cron', async (req, res) => {
+  //   try {
+  //     const { humanReadable } = req.body;
+  //     const cronExpression = cronParser.parseExpression(humanReadable);
+  //     return res.status(200).json({ cronExpression: cronExpression });
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //     return res.status(500).json({ error: 'Internal server error' });
+  //   }
+  // });
 
   // // Power on a TV
   // router.post('/power-on', async (req, res) => {
