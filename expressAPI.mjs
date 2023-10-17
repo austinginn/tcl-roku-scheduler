@@ -9,7 +9,7 @@ const router = express.Router();
 router.use(express.json());
 
 // TVControl API routes
-export default function expressAPI(TVs, tvFileHandler, cronJobs, TCLRokuTV) {
+export default function expressAPI(TVs, tvFileHandler, cronJobs, tcl) {
 
   // API version endpoint
   router.get('/', (req, res) => {
@@ -102,12 +102,16 @@ export default function expressAPI(TVs, tvFileHandler, cronJobs, TCLRokuTV) {
 
       console.log("Starting cron jobs...");
       if (powerOn != "") {
-        const onCron = cron.schedule(powerOn, () => {
+        const onCron = cron.schedule(powerOn, async () => {
           //Power on all tvs in the group
           console.log("Powering on all tvs in group: " + name);
           for (let i = 0; i < TVs.tvs.length; i++) {
             console.log("Powering on tv: " + TVs.tvs[i].name);
-            TCLRokuTV.powerOn(TVs.tvs[i].ipAddress);
+            try {
+              await tcl.powerOn(TVs.tvs[i].ipAddress);
+            } catch (error) {
+              console.error(error);
+            }
           }
         });
 
@@ -115,12 +119,17 @@ export default function expressAPI(TVs, tvFileHandler, cronJobs, TCLRokuTV) {
       }
 
       if (powerOff != "") {
-        const offCron = cron.schedule(powerOff, () => {
+        const offCron = cron.schedule(powerOff, async () => {
           //Power on all tvs in the group
           console.log("Powering off all tvs in group: " + name);
           for (let i = 0; i < TVs.tvs.length; i++) {
             console.log("Powering off tv: " + TVs.tvs[i].name);
-            TCLRokuTV.powerOff(TVs.tvs[i].ipAddress);
+            try {
+              await tcl.powerOff(TVs.tvs[i].ipAddress);
+            } catch (error) {
+              console.error(error);
+            }
+            
           }
         });
 

@@ -5,6 +5,8 @@ import expressAPI from './expressAPI.mjs';
 import cron from 'node-cron';
 import cronstrue from 'cronstrue';
 
+const tcl = new TCLRokuTV();
+
 const app = express();
 const port = process.argv[2] || 3000; // default to port 3000 if no argument is provided
 app.use(express.json());
@@ -21,7 +23,7 @@ initCron();
 
 
 // Mount the TV control API
-app.use('/api', expressAPI(TVs, tvFileHandler, cronJobs, TCLRokuTV)); // Pass the TV data as an argument
+app.use('/api', expressAPI(TVs, tvFileHandler, cronJobs, tcl)); // Pass the TV data as an argument
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
@@ -42,7 +44,7 @@ async function initTVs() {
     }
 }
 
-function initCron() {
+ function initCron() {
     // Initialize cron jobs from JSON data
     console.log("Initializing cron jobs...");
     if(TVs.groups.length == 0){
@@ -51,15 +53,21 @@ function initCron() {
     }
     TVs.groups.forEach((job) => {
         if (job.powerOn != "") {
-            const onCron = cron.schedule(job.powerOn, () => {
+            const onCron = cron.schedule(job.powerOn, async () => {
                 //Power on all tvs in the group
                 //Logic for finding tvs in matching group
                 console.log("Powering on all tvs in group: " + job.name);
                 for(let i = 0; i < TVs.tvs.length; i++){
+                    // console.log("tv index", i);
                     for(let x = 0; x < TVs.tvs[i].group.length; x++){
+                        // console.log("group index", x);
                         if(TVs.tvs[i].group[x] == job.name){
                             console.log("Powering on tv: " + TVs.tvs[i].name);
-                            TCLRokuTV.powerOn(TVs.tvs[i].ipAddress);
+                            try {
+                                await tcl.powerOn(TVs.tvs[i].ipAddress);
+                            } catch (error) {
+                                console.error(error);
+                            } 
                         }
                     }
                 }
@@ -69,7 +77,7 @@ function initCron() {
         }
 
         if(job.powerOff != ""){
-            const offCron = cron.schedule(job.powerOff, () => {
+            const offCron = cron.schedule(job.powerOff, async () => {
                 //Power off all tvs in the group
                 //Logic for finding tvs in matching group
                 console.log("Powering off all tvs in group: " + job.name);
@@ -77,7 +85,12 @@ function initCron() {
                     for(let x = 0; x < TVs.tvs[i].group.length; x++){
                         if(TVs.tvs[i].group[x] == job.name){
                             console.log("Powering off tv: " + TVs.tvs[i].name);
-                            TCLRokuTV.powerOff(TVs.tvs[i].ipAddress);
+                            try {
+                                await tcl.powerOff(TVs.tvs[i].ipAddress);
+                            } catch (error) {
+                                console.error(error);
+                            }
+                            
                         }
                     }
                 }
