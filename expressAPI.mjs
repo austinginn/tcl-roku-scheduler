@@ -9,7 +9,7 @@ const router = express.Router();
 router.use(express.json());
 
 // TVControl API routes
-export default function expressAPI(TVs, tvFileHandler, cronJobs) {
+export default function expressAPI(TVs, tvFileHandler, cronJobs, TCLRokuTV) {
 
   // API version endpoint
   router.get('/', (req, res) => {
@@ -107,6 +107,7 @@ export default function expressAPI(TVs, tvFileHandler, cronJobs) {
           console.log("Powering on all tvs in group: " + name);
           for (let i = 0; i < TVs.tvs.length; i++) {
             console.log("Powering on tv: " + TVs.tvs[i].name);
+            TCLRokuTV.powerOn(TVs.tvs[i].ipAddress);
           }
         });
 
@@ -119,6 +120,7 @@ export default function expressAPI(TVs, tvFileHandler, cronJobs) {
           console.log("Powering off all tvs in group: " + name);
           for (let i = 0; i < TVs.tvs.length; i++) {
             console.log("Powering off tv: " + TVs.tvs[i].name);
+            TCLRokuTV.powerOff(TVs.tvs[i].ipAddress);
           }
         });
 

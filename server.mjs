@@ -21,7 +21,7 @@ initCron();
 
 
 // Mount the TV control API
-app.use('/api', expressAPI(TVs, tvFileHandler, cronJobs)); // Pass the TV data as an argument
+app.use('/api', expressAPI(TVs, tvFileHandler, cronJobs, TCLRokuTV)); // Pass the TV data as an argument
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
