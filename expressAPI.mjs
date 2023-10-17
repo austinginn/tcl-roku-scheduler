@@ -135,6 +135,7 @@ export default function expressAPI(TVs, tvFileHandler, cronJobs, TCLRokuTV) {
   });
 
   // Delete a group
+  // TODO - delete group from tvs
   router.delete('/group/delete', async (req, res) => {
     try {
       const { name } = req.query;

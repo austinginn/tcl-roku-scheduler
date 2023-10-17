@@ -6,7 +6,7 @@ import cron from 'node-cron';
 import cronstrue from 'cronstrue';
 
 const app = express();
-const port = 3000;
+const port = process.argv[2] || 3000; // default to port 3000 if no argument is provided
 app.use(express.json());
 
 //Init file handler
@@ -56,7 +56,7 @@ function initCron() {
                 //Logic for finding tvs in matching group
                 console.log("Powering on all tvs in group: " + job.name);
                 for(let i = 0; i < TVs.tvs.length; i++){
-                    for(let x = 0; x < TVs.tvs.group.length; x++){
+                    for(let x = 0; x < TVs.tvs[i].group.length; x++){
                         if(TVs.tvs[i].group[x] == job.name){
                             console.log("Powering on tv: " + TVs.tvs[i].name);
                             TCLRokuTV.powerOn(TVs.tvs[i].ipAddress);
@@ -74,7 +74,7 @@ function initCron() {
                 //Logic for finding tvs in matching group
                 console.log("Powering off all tvs in group: " + job.name);
                 for(let i = 0; i < TVs.tvs.length; i++){
-                    for(let x = 0; x < TVs.tvs.group.length; x++){
+                    for(let x = 0; x < TVs.tvs[i].group.length; x++){
                         if(TVs.tvs[i].group[x] == job.name){
                             console.log("Powering off tv: " + TVs.tvs[i].name);
                             TCLRokuTV.powerOff(TVs.tvs[i].ipAddress);
