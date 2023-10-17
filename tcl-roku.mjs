@@ -7,7 +7,7 @@ class TCLRokuTV {
     async powerOn(ipAddress) {
         try {
             const url = 'http://' + ipAddress + ':8060/keypress/PowerOn';
-            const response = await fetch(url, "POST");
+            const response = await fetch(url, { method: "POST" });
             // const data = await response.json();
             return response;
         } catch (error) {
@@ -20,7 +20,7 @@ class TCLRokuTV {
     async powerOff(ipAddress) {
         try {
             const url = 'http://' + ipAddress + ':8060/keypress/PowerOff';
-            const response = await fetch(url, "POST");
+            const response = await fetch(url, { method: "POST" });
             // const data = await response.json();
             return response;
         } catch (error) {
@@ -33,7 +33,7 @@ class TCLRokuTV {
     async status(ipAddress) {
         try {
             const url = 'http://' + ipAddress + ':8060/';
-            const response = await fetch(url, "GET");
+            const response = await fetch(url);
             // const data = await response.json();
             return response;
         } catch (error) {
@@ -46,7 +46,7 @@ class TCLRokuTV {
     async command(ipAddress, endpoint) {
         try {
             const url = 'http://' + ipAddress + endpoint;
-            const response = await fetch(url, "POST");
+            const response = await fetch(url, { method: "POST" });
             // const data = await response.json();
             return response;
         } catch (error) {
