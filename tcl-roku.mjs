@@ -8,8 +8,8 @@ class TCLRokuTV {
         try {
             const url = 'http://' + ipAddress + ':8060/keypress/PowerOn';
             const response = await fetch('POST', url);
-            const data = await response.json();
-            return data;
+            // const data = await response.json();
+            return response;
         } catch (error) {
             console.error(error);
             return error;
@@ -21,8 +21,8 @@ class TCLRokuTV {
         try {
             const url = 'http://' + ipAddress + ':8060/keypress/PowerOff';
             const response = await fetch('POST', url);
-            const data = await response.json();
-            return data;
+            // const data = await response.json();
+            return response;
         } catch (error) {
             console.error(error);
             return error;
@@ -30,12 +30,12 @@ class TCLRokuTV {
     }
 
     // Function to get the current status of the TCL TV
-    async powerOn(ipAddress) {
+    async status(ipAddress) {
         try {
             const url = 'http://' + ipAddress + ':8060/';
             const response = await fetch('POST', url);
-            const data = await response.json();
-            return data;
+            // const data = await response.json();
+            return response;
         } catch (error) {
             console.error(error);
             return error;
@@ -47,8 +47,8 @@ class TCLRokuTV {
         try {
             const url = 'http://' + ipAddress + endpoint;
             const response = await fetch('POST', url);
-            const data = await response.json();
-            return data;
+            // const data = await response.json();
+            return response;
         } catch (error) {
             console.error(error);
             return error;
