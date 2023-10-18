@@ -1,6 +1,7 @@
 class TCLRokuTV {
-    constructor() {
+    constructor(logger) {
         // You can initialize any required properties here
+        this.logger = logger;
     }
 
     // Function to power on the TCL TV
@@ -11,7 +12,7 @@ class TCLRokuTV {
             // const data = await response.json();
             return response;
         } catch (error) {
-            console.error(error);
+            this.logger.error(ipAddress, error);
             return error;
         }
     }
@@ -24,7 +25,7 @@ class TCLRokuTV {
             // const data = await response.json();
             return response;
         } catch (error) {
-            console.error(error);
+            this.logger.error(ipAddress, error);
             return error;
         }
     }
@@ -37,7 +38,7 @@ class TCLRokuTV {
             // const data = await response.json();
             return response;
         } catch (error) {
-            console.error(error);
+            this.logger.error(ipAddress, error);
             return error;
         }
     }
@@ -50,7 +51,7 @@ class TCLRokuTV {
             // const data = await response.json();
             return response;
         } catch (error) {
-            console.error(error);
+            this.logger.error(ipAddress, error);
             return error;
         }
     }

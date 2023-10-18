@@ -9,12 +9,17 @@ const router = express.Router();
 router.use(express.json());
 
 // TVControl API routes
-export default function expressAPI(TVs, tvFileHandler, cronJobs, tcl) {
+export default function expressAPI(TVs, tvFileHandler, cronJobs, tcl, logger) {
 
   // API version endpoint
   router.get('/', (req, res) => {
-    console.log(TVs);
+    // console.log(TVs);
     return res.status(200).json({ version: '1.0' });
+  });
+
+  // GET data
+  router.get('/data', (req, res) => {
+    return res.status(200).json(TVs);
   });
 
   // add a new tv
@@ -30,11 +35,11 @@ export default function expressAPI(TVs, tvFileHandler, cronJobs, tcl) {
       // save the new TV
       TVs.tvs.push({ name, ipAddress, group, description });
       await tvFileHandler.saveJSON(TVs);
-      console.log(TVs);
+      logger.info('Added new TV: ' + name + " - " + ipAddress);
 
       return res.status(201).json({ message: 'TV added successfully' });
     } catch (error) {
-      console.error('Error:', error);
+      logger.error(error.message);
       return res.status(500).json({ error: 'Internal server error' });
     }
   });
@@ -54,10 +59,10 @@ export default function expressAPI(TVs, tvFileHandler, cronJobs, tcl) {
       // Update the TV
       TVs.tvs[tvIndex] = { name, ipAddress, group, description };
       await tvFileHandler.saveJSON(TVs);
-      console.log(TVs);
+      logger.info("Updated TV: " + name + " - " + ipAddress);
       return res.status(200).json({ message: 'TV updated successfully' });
     } catch (error) {
-      console.error('Error:', error);
+      logger.error(error.message);
       return res.status(500).json({ error: 'Internal server error' });
     }
   });
@@ -76,10 +81,10 @@ export default function expressAPI(TVs, tvFileHandler, cronJobs, tcl) {
       TVs.tvs.splice(tvIndex, 1);
 
       await tvFileHandler.saveJSON(TVs);
-      console.log(TVs);
+      logger.info("Deleted TV: " + ipAddress);
       return res.status(200).json({ message: 'TV deleted successfully' });
     } catch (error) {
-      console.error('Error:', error);
+      logger.error(error.message);
       return res.status(500).json({ error: 'Internal server error' });
     }
   });
@@ -87,7 +92,7 @@ export default function expressAPI(TVs, tvFileHandler, cronJobs, tcl) {
   // add a new group
   router.post('/group/add', async (req, res) => {
     try {
-      console.log(req.body);
+      // console.log(req.body);
       const { name, powerOn, powerOff } = req.body;
       // Check if the TV already exists
       if (TVs.groups.find((group) => group.name === name)) {
@@ -100,17 +105,17 @@ export default function expressAPI(TVs, tvFileHandler, cronJobs, tcl) {
       TVs.groups.push({ name, powerOn, powerOff });
       await tvFileHandler.saveJSON(TVs);
 
-      console.log("Starting cron jobs...");
+      logger.info("Added new group - " + name + ". Starting cron job...");
       if (powerOn != "") {
         const onCron = cron.schedule(powerOn, async () => {
           //Power on all tvs in the group
-          console.log("Powering on all tvs in group: " + name);
+          logger.info("Powering on all tvs in group: " + name);
           for (let i = 0; i < TVs.tvs.length; i++) {
-            console.log("Powering on tv: " + TVs.tvs[i].name);
+            logger.info("Powering on tv: " + TVs.tvs[i].name);
             try {
               await tcl.powerOn(TVs.tvs[i].ipAddress);
             } catch (error) {
-              console.error(error);
+              logger.error(error.message);
             }
           }
         });
@@ -121,13 +126,13 @@ export default function expressAPI(TVs, tvFileHandler, cronJobs, tcl) {
       if (powerOff != "") {
         const offCron = cron.schedule(powerOff, async () => {
           //Power on all tvs in the group
-          console.log("Powering off all tvs in group: " + name);
+          logger.info("Powering off all tvs in group: " + name);
           for (let i = 0; i < TVs.tvs.length; i++) {
-            console.log("Powering off tv: " + TVs.tvs[i].name);
+            logger.info("Powering off tv: " + TVs.tvs[i].name);
             try {
               await tcl.powerOff(TVs.tvs[i].ipAddress);
             } catch (error) {
-              console.error(error);
+              logger.error(error.message);
             }
             
           }
@@ -138,7 +143,7 @@ export default function expressAPI(TVs, tvFileHandler, cronJobs, tcl) {
 
       return res.status(201).json({ message: 'Group added successfully' });
     } catch (error) {
-      console.error('Error:', error);
+      logger.error(error.message);
       return res.status(500).json({ error: 'Internal server error' });
     }
   });
@@ -158,22 +163,22 @@ export default function expressAPI(TVs, tvFileHandler, cronJobs, tcl) {
       TVs.groups.splice(groupIndex, 1);
 
       //Try to stop the cron job if it exists and log it to the console
-      console.log("Attempting to stop cron jobs");
+      logger.info("Attempting to stop cron jobs");
       if (cronJobs[name + " - on"]) {
         cronJobs[name + " - on"].stop();
-        console.log("Stopped cron job: " + name + " - on");
+        logger.info("Stopped cron job: " + name + " - on");
       }
 
       if (cronJobs[name + " - off"]) {
         cronJobs[name + " - off"].stop();
-        console.log("Stopped cron job: " + name + " - off");
+        logger.info("Stopped cron job: " + name + " - off");
       }
 
       await tvFileHandler.saveJSON(TVs);
-      console.log(TVs);
+      // console.log(TVs);
       return res.status(200).json({ message: 'Group deleted successfully' });
     } catch (error) {
-      console.error('Error:', error);
+      logger.error(error.message);
       return res.status(500).json({ error: 'Internal server error' });
     }
   });

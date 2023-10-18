@@ -4,8 +4,9 @@ import express from 'express';
 import expressAPI from './expressAPI.mjs';
 import cron from 'node-cron';
 import cronstrue from 'cronstrue';
+import logger from './logger.mjs';
 
-const tcl = new TCLRokuTV();
+const tcl = new TCLRokuTV(logger);
 
 const app = express();
 const port = process.argv[2] || 3000; // default to port 3000 if no argument is provided
@@ -23,22 +24,22 @@ initCron();
 
 
 // Mount the TV control API
-app.use('/api', expressAPI(TVs, tvFileHandler, cronJobs, tcl)); // Pass the TV data as an argument
+app.use('/api', expressAPI(TVs, tvFileHandler, cronJobs, tcl, logger)); // Pass the TV data as an argument
 
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+    logger.log('info', `Server is running on port ${port}`);
 });
 
 
 async function initTVs() {
-    console.log("Loading save data...");
+    logger.log('info',"Loading save data...");
     try {
         const tvData = await tvFileHandler.readJSON();
-        console.log("Loaded!");
+        logger.info("Loaded!");
         return tvData;
     } catch (error) {
-        console.error(error);
-        console.log("Creating new tvs.json save file...");
+        logger.error(error.message);
+        logger.info("Creating new tvs.json save file...");
         await tvFileHandler.saveJSON({ "tvs": [], "groups": [] });
         return {};
     }
@@ -46,9 +47,9 @@ async function initTVs() {
 
  function initCron() {
     // Initialize cron jobs from JSON data
-    console.log("Initializing cron jobs...");
+    logger.info("Initializing cron jobs...");
     if(TVs.groups.length == 0){
-        console.log("No groups found.");
+        logger.info("No groups found.");
         return;
     }
     TVs.groups.forEach((job) => {
@@ -56,39 +57,39 @@ async function initTVs() {
             const onCron = cron.schedule(job.powerOn, async () => {
                 //Power on all tvs in the group
                 //Logic for finding tvs in matching group
-                console.log("Powering on all tvs in group: " + job.name);
+                logger.info("Powering on all tvs in group: " + job.name);
                 for(let i = 0; i < TVs.tvs.length; i++){
                     // console.log("tv index", i);
                     for(let x = 0; x < TVs.tvs[i].group.length; x++){
                         // console.log("group index", x);
                         if(TVs.tvs[i].group[x] == job.name){
-                            console.log("Powering on tv: " + TVs.tvs[i].name);
+                            logger.info("Powering on tv: " + TVs.tvs[i].name);
                             try {
                                 await tcl.powerOn(TVs.tvs[i].ipAddress);
                             } catch (error) {
-                                console.error(error);
+                                logger.error(error.message);
                             } 
                         }
                     }
                 }
             });
             cronJobs[job.name + " - on"] = onCron;
-            console.log("Created power on job for: " + job.name + " - " + cronstrue.toString(job.powerOn));
+            logger.info("Created power on job for: " + job.name + " - " + cronstrue.toString(job.powerOn));
         }
 
         if(job.powerOff != ""){
             const offCron = cron.schedule(job.powerOff, async () => {
                 //Power off all tvs in the group
                 //Logic for finding tvs in matching group
-                console.log("Powering off all tvs in group: " + job.name);
+                logger.info("Powering off all tvs in group: " + job.name);
                 for(let i = 0; i < TVs.tvs.length; i++){
                     for(let x = 0; x < TVs.tvs[i].group.length; x++){
                         if(TVs.tvs[i].group[x] == job.name){
-                            console.log("Powering off tv: " + TVs.tvs[i].name);
+                            logger.info("Powering off tv: " + TVs.tvs[i].name);
                             try {
                                 await tcl.powerOff(TVs.tvs[i].ipAddress);
                             } catch (error) {
-                                console.error(error);
+                                logger.error(error.message);
                             }
                             
                         }
@@ -97,8 +98,16 @@ async function initTVs() {
             });
 
             cronJobs[job.name + " - off"] = offCron;
-            console.log("Created power off job for: " + job.name + " - " + cronstrue.toString(job.powerOff));
+            logger.info("Created power off job for: " + job.name + " - " + cronstrue.toString(job.powerOff));
         }
     });
 }
 
+process.on('uncaughtException', (error) => {
+    logger.error(`Uncaught Exception: ${error.message}`);
+    process.exit(1); // Exit the application or handle it appropriately.
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  });
