@@ -1,3 +1,4 @@
+//TCL ROKU TV SCHEUDLER | AUSTIN GINN 2023
 import TCLRokuTV from "./tcl-roku.mjs";
 import JSONFileHandler from "./json-file-handler.mjs";
 import express from 'express';
@@ -6,7 +7,7 @@ import cron from 'node-cron';
 import cronstrue from 'cronstrue';
 import logger from './logger.mjs';
 
-const tcl = new TCLRokuTV(logger);
+const tcl = new TCLRokuTV(logger); // TCL 
 
 const app = express();
 const port = process.argv[2] || 3000; // default to port 3000 if no argument is provided

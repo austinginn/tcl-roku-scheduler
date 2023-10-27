@@ -1,3 +1,5 @@
+//TCL ROKU TV | AUSTIN GINN 2023
+//A simple class to handle sending commands to TCL ROKU TVs
 class TCLRokuTV {
     constructor(logger) {
         // You can initialize any required properties here
@@ -31,6 +33,7 @@ class TCLRokuTV {
     }
 
     // Function to get the current status of the TCL TV
+    // NOT FULLY IMPLEMENTED
     async status(ipAddress) {
         try {
             const url = 'http://' + ipAddress + ':8060/';

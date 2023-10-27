@@ -1,3 +1,4 @@
+// LOGGING CONFIGURATION | AUSTIN GINN 2023
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 

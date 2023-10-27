@@ -1,3 +1,4 @@
+// JSON FILE HANDLER | AUSTIN GINN 2023
 import fs from 'fs';
 
 class JSONFileHandler {
